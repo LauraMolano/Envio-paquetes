@@ -1,0 +1,87 @@
+package co.unicauca.microkernel.presentation;
+
+import co.unicauca.microkernel.business.DeliveryService;
+import co.unicauca.microkernel.business.ProductService;
+import co.unicauca.microkernel.common.entities.Delivery;
+import co.unicauca.microkernel.common.entities.Product;
+
+import java.util.List;
+import java.util.Scanner;
+
+public class Console {
+
+    private ProductService productService;
+    private DeliveryService deliveryService;
+
+    private Scanner scanner;
+
+    public Console(){
+        productService = new ProductService();
+        deliveryService = new DeliveryService();
+        scanner = new Scanner(System.in);
+    }
+
+    public void start() {
+
+        int option;
+
+        System.out.println("Aplicacion de envios");
+
+        do {
+
+            System.out.println();
+            System.out.println("1. Calcular costo de envio.");
+            System.out.println("2. Salir.");
+
+            option = scanner.nextInt();
+
+            switch (option) {
+                case 1:
+                    handleDeliveryCostOption();
+                    break;
+            }
+
+        } while(option != 2);
+
+        System.out.println("Aplicacion terminada");
+    }
+
+    private void handleDeliveryCostOption(){
+
+        //Mostrar producto para el cual se calculará el envío.
+        List<Product> products = productService.getAll();
+
+        System.out.println("Seleccione un producto: ");
+
+        for (int index = 0; index < products.size(); index++) {
+
+            Product product = products.get(index);
+            System.out.println(index + ". " + product.getName());
+        }
+
+        //Seleccionar producto para el que se calculará el envío.
+        int productIndex = scanner.nextInt();
+        Product selectedProduct = products.get(productIndex);
+
+        System.out.println("Distancia a donde se enviara el producto (kilometros): ");
+        double distance = scanner.nextDouble();
+
+        //Leer salto de línea para que pueda pregunta por el código del país. (https://stackoverflow.com/a/13102066/1601530)
+        scanner.nextLine();
+
+        System.out.println("Codigo del pais donde se entregara el producto: ");
+        String countryCode = scanner.nextLine();
+
+        //Creamos el objeto que será pasado a la capa de dominio para que se haga el cálculo.
+        Delivery deliveryEntity = new Delivery(selectedProduct, distance, countryCode);
+
+        try {
+
+            double cost = deliveryService.calculateDeliveryCost(deliveryEntity);
+            System.out.println("El costo del envio es " + cost);
+
+        } catch (Exception exception) {
+            System.out.println("No fue posible calcular el costo del envio. " + exception.getMessage());
+        }
+    }
+}
